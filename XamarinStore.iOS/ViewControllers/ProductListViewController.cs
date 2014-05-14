@@ -5,13 +5,136 @@ using System.Collections.Generic;
 
 using MonoTouch.UIKit;
 using MonoTouch.Foundation;
+using Alliance.Carousel;
 
 namespace XamarinStore.iOS
 {
+
+	public class LinearDelegate : CarouselViewDelegate
+	{
+		ProductListViewController vc;
+
+		public LinearDelegate(ProductListViewController vc)
+		{
+			this.vc = vc;
+		}
+
+		public override float ValueForOption(CarouselView carousel, CarouselOption option, float aValue)
+		{
+			if (option == CarouselOption.Spacing)
+			{
+				return aValue * 1.1f;
+			}
+			return aValue;
+		}
+
+		public override void DidSelectItem(CarouselView carousel, int index)
+		{
+			Console.WriteLine("Selected: " + ++index);
+		}
+	}
+
+
+	public class LinearDataSource : CarouselViewDataSource
+	{
+		ProductListViewController vc;
+		List<Product> product;
+
+		public LinearDataSource(ProductListViewController vc, List<Product> p)
+		{
+			this.vc = vc;
+			this.product = p;
+		}
+
+		public override uint NumberOfItems(CarouselView carousel)
+		{
+			return (uint)product.Count;
+		}
+
+		public override UIView ViewForItem(CarouselView carousel, uint index, UIView reusingView)
+		{
+
+			UILabel label;
+
+			if (reusingView == null)
+			{
+				var imgView = new UIImageView(new RectangleF(0, 0, 200, 200))
+				{
+
+					Image = FromUrl( index > 1 ? product[0].ImageForSize(200) : product[(int)index].ImageForSize(200) ),
+					ContentMode = UIViewContentMode.Center
+				};
+
+
+				//imgView.LoadUrl (index > 1 ? product[0].ImageUrl : product[(int)index].ImageUrl);
+
+
+				label = new UILabel(imgView.Bounds)
+				{
+					BackgroundColor = UIColor.Clear,
+					TextAlignment = UITextAlignment.Center,
+					Tag = 1
+				};
+				label.Font = label.Font.WithSize(50);
+				imgView.AddSubview(label);
+				reusingView = imgView;
+			}
+			else
+			{
+				label = (UILabel)reusingView.ViewWithTag(1);
+			}
+
+			label.Text = vc.items[(int)index].ToString();
+
+			return reusingView;
+		}
+
+		static UIImage FromUrl (string uri)
+		{
+			using (var url = new NSUrl (uri))
+			using (var data = NSData.FromUrl (url))
+				return UIImage.LoadFromData (data);
+			//return Scale2(UIImage.LoadFromData (data), new SizeF(200,200));
+		}
+
+		public static UIImage Scale (UIImage source, SizeF newSize)
+		{
+			UIGraphics.BeginImageContext (newSize);
+			var context = UIGraphics.GetCurrentContext ();
+			context.InterpolationQuality= MonoTouch.CoreGraphics.CGInterpolationQuality.High;
+			context.TranslateCTM (0, newSize.Height);
+			context.ScaleCTM (1f, -1f);
+
+			context.DrawImage (new RectangleF (0, 0, newSize.Width, newSize.Height), source.CGImage);
+
+			var scaledImage = UIGraphics.GetImageFromCurrentImageContext();
+			UIGraphics.EndImageContext();
+
+			return scaledImage;         
+		}
+
+		public static UIImage Scale2 (UIImage source, SizeF newSize)
+		{
+			UIGraphics.BeginImageContext (newSize);
+			var context = UIGraphics.GetCurrentContext ();
+			context.TranslateCTM (0, newSize.Height);
+			context.ScaleCTM (1f, -1f);
+
+			context.DrawImage (new RectangleF (0, 0, newSize.Width, newSize.Height), source.CGImage);
+
+			var scaledImage = UIGraphics.GetImageFromCurrentImageContext();
+			UIGraphics.EndImageContext();
+
+			return scaledImage;         
+		}
+	}
+
 	public class ProductListViewController : UITableViewController
 	{
 		const int ProductCellRowHeight = 300;
 		static float ImageWidth = UIScreen.MainScreen.Bounds.Width * UIScreen.MainScreen.Scale;
+		CarouselView carousel;
+		public List<int> items;
 
 		public event Action<Product> ProductTapped = delegate {};
 
@@ -29,16 +152,31 @@ namespace XamarinStore.iOS
 				ProductTapped (products);
 			});
 
+			items = Enumerable.Range(1, 100).ToList(); // Prettier than for (int i = 0; i < 100; i++)
+
+
 			GetData ();
+
+
 		}
 
 		async void GetData ()
 		{
-			source.Products = await WebService.Shared.GetProducts ();
+			//source.Products
+
+			List<Product> PP = await WebService.Shared.GetProducts ();
 			//Kicking off a task no need to await
 			#pragma warning disable 4014
 			WebService.Shared.PreloadImages (320 * UIScreen.MainScreen.Scale);
 			#pragma warning restore 4014
+
+			carousel = new CarouselView(View.Bounds);
+			carousel.DataSource = new LinearDataSource(this, PP);
+			carousel.Delegate = new LinearDelegate(this);
+			carousel.CarouselType = CarouselType.CoverFlow;
+			carousel.ConfigureView();
+			View.AddSubview(carousel);
+
 			TableView.ReloadData ();
 		}
 
