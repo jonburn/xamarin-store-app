@@ -13,6 +13,7 @@ namespace XamarinStore.iOS
 		{
 			// if you want to use a different Application Delegate class from "AppDelegate"
 			// you can specify it here.
+			PixateFreestyleLib.PixateFreestyle.InitializePixateFreestyle ();
 			UIApplication.Main (args, null, "AppDelegate");
 		}
 	}

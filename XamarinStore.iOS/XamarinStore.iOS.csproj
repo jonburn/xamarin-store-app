@@ -132,6 +132,9 @@
     <Reference Include="Alliance.Carousel">
       <HintPath>..\Components\Alliance.Carousel-1.2\lib\ios\Alliance.Carousel.dll</HintPath>
     </Reference>
+    <Reference Include="PixateFreestyle">
+      <HintPath>..\Components\PixateFreestyle-2.1.2\lib\ios\PixateFreestyle.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -265,6 +268,7 @@
     <BundleResource Include="Resources\t-shirt%402x.png" />
     <BundleResource Include="Resources\circle.png" />
     <BundleResource Include="Resources\circle%402x.png" />
+    <BundleResource Include="Resources\default.css" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="btprogresshud">
@@ -276,8 +280,11 @@
       <Visible>False</Visible>
     </XamarinComponentReference>
     <XamarinComponentReference Include="Alliance.Carousel">
-      <InstallationInProgress>True</InstallationInProgress>
       <Version>1.2</Version>
+      <Visible>False</Visible>
+    </XamarinComponentReference>
+    <XamarinComponentReference Include="PixateFreestyle">
+      <Version>2.1.2</Version>
       <Visible>False</Visible>
     </XamarinComponentReference>
   </ItemGroup>
